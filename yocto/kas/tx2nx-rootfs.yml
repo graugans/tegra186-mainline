@@ -1,0 +1,65 @@
+# Minimal NFS rootfs for the Jetson TX2 NX bring-up.
+# OpenEmbedded wrynose (Yocto 6.0). The kernel is built outside Yocto,
+# so linux-dummy replaces the kernel recipe.
+#
+#   kas build yocto/kas/tx2nx-rootfs.yml
+#
+# Output: $KAS_WORK_DIR/build/tmp/deploy/images/genericarm64/
+#         core-image-minimal-genericarm64.rootfs.tar.zst
+header:
+  version: 19
+
+machine: genericarm64
+distro: poky
+target: core-image-minimal
+
+repos:
+  bitbake:
+    url: https://git.openembedded.org/bitbake
+    branch: "2.18"
+    layers:
+      .: excluded
+  openembedded-core:
+    url: https://git.openembedded.org/openembedded-core
+    branch: wrynose
+    layers:
+      meta:
+  meta-yocto:
+    url: https://git.yoctoproject.org/meta-yocto
+    branch: wrynose
+    layers:
+      meta-poky:
+      meta-yocto-bsp:
+  meta-openembedded:
+    url: https://git.openembedded.org/meta-openembedded
+    branch: wrynose
+    layers:
+      meta-oe:
+
+local_conf_header:
+  external-kernel: |
+    # Kernel, modules and DTB come from our own mainline build.
+    PREFERRED_PROVIDER_virtual/kernel = "linux-dummy"
+    MACHINE_EXTRA_RRECOMMENDS = ""
+    INITRAMFS_IMAGE = ""
+    EXTRA_IMAGEDEPENDS = ""
+    IMAGE_CLASSES:remove = "qemuboot"
+    MACHINE_FEATURES:remove = "efi acpi"
+  nfs-rootfs: |
+    # Rootfs is unpacked by the rootfs-helper into /srv/nfs/tx2nx.
+    IMAGE_FSTYPES = "tar.zst"
+    SERIAL_CONSOLES = "115200;ttyS0"
+  lab-access: |
+    # Isolated lab network only: passwordless root login on UART and SSH.
+    EXTRA_IMAGE_FEATURES += "ssh-server-openssh allow-empty-password \
+        empty-root-password allow-root-login"
+  test-tools: |
+    IMAGE_INSTALL:append = " kmod ethtool iperf3 ltp iproute2 util-linux procps"
+  diskmon: |
+    BB_DISKMON_DIRS = "\
+        STOPTASKS,${TMPDIR},1G,100K \
+        STOPTASKS,${DL_DIR},1G,100K \
+        STOPTASKS,${SSTATE_DIR},1G,100K \
+        HALT,${TMPDIR},100M,1K \
+        HALT,${DL_DIR},100M,1K \
+        HALT,${SSTATE_DIR},100M,1K"
