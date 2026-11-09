@@ -113,8 +113,12 @@ ccache. Result in `/work/kernel-out/`: `Image`,
 ### 5. Build the rootfs (inside the container)
 
 ```sh
-kas build yocto/kas/tx2nx-rootfs.yml
+scripts/rootfs-build.sh
 ```
+
+Creates `/work/yocto` (and the downloads/sstate dirs) and runs
+`kas build yocto/kas/tx2nx-rootfs.yml`. Calling kas directly on a fresh
+`/work` fails because kas does not create missing parents of its build dir.
 
 Result: `/work/yocto/build/tmp/deploy/images/genericarm64/core-image-minimal-genericarm64.rootfs.tar.zst`
 

@@ -2,7 +2,7 @@
 # OpenEmbedded wrynose (Yocto 6.0). The kernel is built outside Yocto,
 # so linux-dummy replaces the kernel recipe.
 #
-#   kas build yocto/kas/tx2nx-rootfs.yml
+#   scripts/rootfs-build.sh   (creates the work dirs, then runs kas build)
 #
 # Output: $KAS_WORK_DIR/build/tmp/deploy/images/genericarm64/
 #         core-image-minimal-genericarm64.rootfs.tar.zst
