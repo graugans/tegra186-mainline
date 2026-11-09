@@ -1,5 +1,10 @@
 # tegra186-mainline
 
+> **Disclaimer:** This is a small hobby project. All opinions are my own and
+> have nothing to do with my employer or my work. It is an experiment to see
+> how far AI can help close the security gap left by abandoned hardware.
+> Contributions are welcome – feel free to open an issue or a pull request.
+
 Bring a current **vanilla mainline LTS kernel** to the **NVIDIA Jetson TX2 NX**
 (Tegra186), which NVIDIA left on JetPack 4.6.6 / kernel 4.9.
 
