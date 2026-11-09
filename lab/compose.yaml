@@ -1,0 +1,78 @@
+# Host-side lab services for the Jetson TX2 NX bring-up.
+# Run on the lab host (not in the dev container):
+#
+#   docker compose -f lab/compose.yaml up -d --build
+#   docker compose -f lab/compose.yaml --profile board up -d   # + labgrid exporter
+#
+# All services use the host network. Settings below are defaults; override
+# them in lab/.env (git-ignored), see lab/README.md.
+name: tegra186-lab
+
+x-lab-env: &lab-env
+  LAB_IF: ${LAB_IF:-enp48s0f3u1u3}
+  LAB_HOST_IP: ${LAB_HOST_IP:-192.168.0.201}
+  LAB_NETMASK: ${LAB_NETMASK:-255.255.255.0}
+  BOARD_IP: ${BOARD_IP:-192.168.0.69}
+  BOARD_MAC: ${BOARD_MAC:-}
+
+services:
+  # DHCP (one fixed address for the board) + TFTP from /srv/tftp. No DNS.
+  dnsmasq:
+    build: images/services
+    image: tegra186-lab/services
+    network_mode: host
+    cap_add: [NET_ADMIN]
+    environment: *lab-env
+    volumes:
+      - ./dnsmasq/entrypoint.sh:/entrypoint.sh:ro
+      - ${TFTP_ROOT:-/srv/tftp}:/srv/tftp:ro
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    restart: unless-stopped
+
+  # Lab service for throughput tests (decision 0007), bound to the lab IP only.
+  iperf3-server:
+    build: images/services
+    image: tegra186-lab/services
+    network_mode: host
+    command: ["iperf3", "--server", "--bind", "${LAB_HOST_IP:-192.168.0.201}"]
+    restart: unless-stopped
+
+  # The only writer of the NFS rootfs. Fixed actions over HTTP on localhost:
+  # POST /rootfs/reset, POST /modules/install, GET /status.
+  rootfs-helper:
+    build: images/services
+    image: tegra186-lab/services
+    network_mode: host
+    environment:
+      HELPER_LISTEN: 127.0.0.1:${ROOTFS_HELPER_PORT:-8091}
+    volumes:
+      - ./rootfs-helper/rootfs-helper.py:/rootfs-helper.py:ro
+      - ${NFS_ROOT:-/srv/nfs/tx2nx}:/nfsroot
+      - ${WORK_DIR:-../../tegra186-work}:/work:ro
+    command: ["python3", "-u", "/rootfs-helper.py"]
+    restart: unless-stopped
+
+  labgrid-coordinator:
+    build: images/labgrid
+    image: tegra186-lab/labgrid
+    network_mode: host
+    command: ["labgrid-coordinator", "--listen", "127.0.0.1:20408"]
+    restart: unless-stopped
+
+  # Needs the UART adapter and Norn; enable with --profile board once wired.
+  labgrid-exporter:
+    build: images/labgrid
+    image: tegra186-lab/labgrid
+    profiles: [board]
+    depends_on: [labgrid-coordinator]
+    network_mode: host
+    environment:
+      LAB_UART: ${LAB_UART:-/dev/ttyUSB0}
+      NORN_URL: ${NORN_URL:-http://localhost:8080}
+    devices:
+      - ${LAB_UART:-/dev/ttyUSB0}:${LAB_UART:-/dev/ttyUSB0}
+    volumes:
+      - ./labgrid/exporter.yaml:/config/exporter.yaml:ro
+    command: ["labgrid-exporter", "--coordinator", "127.0.0.1:20408",
+              "--name", "lab", "--hostname", "localhost", "/config/exporter.yaml"]
+    restart: unless-stopped

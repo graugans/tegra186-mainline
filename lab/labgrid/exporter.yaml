@@ -1,0 +1,10 @@
+# labgrid exporter resources (Jinja2 template, env vars via env[...]).
+# Started with: docker compose -f lab/compose.yaml --profile board up -d
+tx2nx:
+  RawSerialPort:
+    port: "{{ env['LAB_UART'] }}"
+    speed: 115200
+  NetworkPowerPort:
+    model: rest
+    host: "{{ env['NORN_URL'] }}/api/v1/relay/{index}/value"
+    index: 1
