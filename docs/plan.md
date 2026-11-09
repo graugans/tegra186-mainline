@@ -43,6 +43,7 @@ Lab host
 │   └── Norn             → relays (power, reset, recovery, power button)
 ├── docker compose (network_mode: host)
 │   ├── dnsmasq          → DHCP + TFTP (/srv/tftp), lab interface only
+│   ├── iperf3-server    → lab service for throughput tests
 │   ├── labgrid          → coordinator + exporter (UART, Norn port)
 │   └── rootfs-helper    → runs as root, resets rootfs, installs modules
 └── Dev container (no root rights on shared paths)
@@ -61,7 +62,8 @@ Lab host
 
 ### Lab network
 
-- Dedicated network adapter on the host, isolated subnet (example: `192.168.77.0/24`)
+- Dedicated USB NIC `enp48s0f3u1u3` on the host, isolated segment (host + board only)
+- Host `192.168.0.201/24` (static), board `192.168.0.69` (only DHCP address handed out); see decision 0008
 - dnsmasq and NFS bound to this interface only
 - No DHCP leaking into the university/company network
 
@@ -161,7 +163,7 @@ Add the PHY driver matching the fitted PHY (to be determined during bring-up).
 
 ### Boot args
 ```
-console=ttyS0,115200n8 earlycon root=/dev/nfs nfsroot=192.168.77.1:/srv/nfs/tx2nx,v3,tcp ip=dhcp rw
+console=ttyS0,115200n8 earlycon root=/dev/nfs nfsroot=192.168.0.201:/srv/nfs/tx2nx,v3,tcp ip=dhcp rw
 ```
 
 ### U-Boot environment (one-time, with local fallback)
@@ -172,9 +174,10 @@ saveenv
 
 ### NFS export on the host `/etc/exports.d/tx2nx.exports`
 ```
-/srv/nfs/tx2nx 192.168.77.0/24(rw,no_root_squash,no_subtree_check,sync)
+/srv/nfs/tx2nx 192.168.0.69(rw,no_root_squash,no_subtree_check,sync)
 ```
-`no_root_squash` is required for a root filesystem, so restrict the export strictly to the lab network.
+`no_root_squash` is required for a root filesystem, so the export is restricted to the board IP
+(file: `lab/host/tx2nx.exports`).
 
 ### labgrid resource for Norn
 ```yaml
@@ -226,6 +229,7 @@ our own changes as a patch series.
 - [ ] **A/B redundancy** in L4T: failed boots count against a retry counter → disable for the lab
 - [ ] **Auto power-on** of the carrier board when power is applied – verify
 - [ ] **Norn `cycle` via REST** available? Otherwise add an endpoint
+- [ ] **`serverip` after `dhcp` in L4T U-Boot:** dnsmasq sends option 66 (TFTP server) but no boot file; verify U-Boot sets `serverip`, otherwise set it in the U-Boot env
 - [ ] **USB mass storage in U-Boot** on T186 untested – TFTP is the default path
 - [ ] **Rootfs permissions:** only the rootfs-helper unpacks/modifies the NFS rootfs
 - [ ] **GPU:** Nouveau (gp10b) without CUDA; camera/ISP largely missing upstream

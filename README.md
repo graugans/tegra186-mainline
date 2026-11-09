@@ -16,7 +16,7 @@ test runs in [docs/bringup-log.md](docs/bringup-log.md).
 
 | Phase | State |
 |---|---|
-| 0 – Scaffolding | in progress: repo, dev container, kernel build (v6.18.62 defconfig) and wrynose rootfs build done; lab network, UART, Compose stack open |
+| 0 – Scaffolding | in progress: repo, dev container, kernel build (v6.18.62 defconfig) and wrynose rootfs build done; Compose stack written (untested on host); lab network firewall, UART, Norn open |
 | 1a – Netboot with L4T 4.9 | open |
 | 1b – Mainline to a shell (initramfs) | open |
 | 1c – Mainline with NFS root | open |
@@ -140,28 +140,61 @@ sudo install -d -o "$USER" -g "$USER" /srv/tftp
 # NFS root, owned by root; only the rootfs-helper writes here
 sudo install -d -o root -g root /srv/nfs/tx2nx
 
-# NFS server
+# NFS server, export restricted to the board IP
 sudo dnf install -y nfs-utils
-echo '/srv/nfs/tx2nx 192.168.77.0/24(rw,no_root_squash,no_subtree_check,sync)' \
-  | sudo tee /etc/exports.d/tx2nx.exports
+sudo cp lab/host/tx2nx.exports /etc/exports.d/tx2nx.exports
 sudo systemctl enable --now nfs-server
 sudo exportfs -ra && sudo exportfs -v
 ```
 
-`no_root_squash` is required for a root filesystem – keep the export restricted
-to the isolated lab subnet.
+`no_root_squash` is required for a root filesystem – the export in
+[lab/host/tx2nx.exports](lab/host/tx2nx.exports) is limited to `192.168.0.69`.
 
-### 7. Host: lab network (manual, as root) – *TODO, next session*
+### 7. Host: lab network (manual, as root)
 
-Dedicated USB NIC on an isolated subnet (`192.168.77.0/24`, host `.1`),
-NFS/DHCP/TFTP reachable only on that interface (firewalld zone). Exact
-interface name and commands will be added here.
+The lab NIC `enp48s0f3u1u3` (USB) is an isolated segment: host and board only,
+no other DHCP server.
 
-### 8. Host: UART and Norn – *TODO, next session*
+| | Address |
+|---|---|
+| Host (`enp48s0f3u1u3`, static) | `192.168.0.201/24` |
+| TX2 NX (from dnsmasq) | `192.168.0.69` |
 
-USB-UART adapter (stable `/dev/serial/by-id/...` path), Norn REST service on
-the host, then the Compose stack in `lab/` (dnsmasq, labgrid, rootfs-helper).
-Afterwards `/srv/tftp` and the UART get mounted into the dev container.
+The host address is already configured. Open the lab services on that
+interface only, with a dedicated firewalld zone:
+
+```sh
+sudo firewall-cmd --permanent --new-zone=tx2nx-lab
+for s in dhcp tftp nfs nfs3 mountd rpc-bind; do
+  sudo firewall-cmd --permanent --zone=tx2nx-lab --add-service=$s
+done
+sudo firewall-cmd --permanent --zone=tx2nx-lab --add-port=5201/tcp   # iperf3
+sudo firewall-cmd --reload
+# bind the interface to the zone via NetworkManager (survives reconnects)
+sudo nmcli connection modify \
+  "$(nmcli -g GENERAL.CONNECTION device show enp48s0f3u1u3)" connection.zone tx2nx-lab
+sudo nmcli device reapply enp48s0f3u1u3
+firewall-cmd --get-active-zones
+```
+
+### 8. Host: lab services (Docker Compose)
+
+```sh
+docker compose -f lab/compose.yaml up -d --build
+docker compose -f lab/compose.yaml ps
+```
+
+Starts dnsmasq (DHCP + TFTP on the lab NIC), iperf3-server, rootfs-helper and
+the labgrid coordinator. Interface and addresses are variables; override them
+in `lab/.env` (see [lab/README.md](lab/README.md)). Check from the dev
+container: `scripts/rootfs.sh status`.
+
+### 9. Host: UART and Norn – *TODO, next session*
+
+USB-UART adapter (stable `/dev/serial/by-id/...` path) and the Norn REST
+service on the host. labgrid reaches Norn over the network (`NORN_URL`). Then
+start the exporter with `--profile board`. Afterwards `/srv/tftp` and the UART
+get mounted into the dev container.
 
 ---
 
