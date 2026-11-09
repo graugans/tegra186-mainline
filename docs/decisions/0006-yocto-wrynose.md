@@ -9,3 +9,7 @@ branch `wrynose`. Machine `genericarm64`; the kernel recipe is replaced by
 
 **Consequences:** Kernel modules are installed into the rootfs by the
 rootfs-helper, not by the image.
+
+Layer commits are pinned in `yocto/kas/tx2nx-rootfs.lock.yml` (generated
+with `kas lock`, picked up automatically by kas); update it deliberately with
+`kas lock` rather than floating on the branch heads.

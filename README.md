@@ -16,7 +16,7 @@ test runs in [docs/bringup-log.md](docs/bringup-log.md).
 
 | Phase | State |
 |---|---|
-| 0 – Scaffolding | in progress: repo, dev container, kas config and kernel build (v6.18.62 defconfig) done; lab network, UART, Compose stack open |
+| 0 – Scaffolding | in progress: repo, dev container, kernel build (v6.18.62 defconfig) and wrynose rootfs build done; lab network, UART, Compose stack open |
 | 1a – Netboot with L4T 4.9 | open |
 | 1b – Mainline to a shell (initramfs) | open |
 | 1c – Mainline with NFS root | open |
@@ -119,6 +119,12 @@ scripts/rootfs-build.sh
 Creates `/work/yocto` (and the downloads/sstate dirs) and runs
 `kas build yocto/kas/tx2nx-rootfs.yml`. Calling kas directly on a fresh
 `/work` fails because kas does not create missing parents of its build dir.
+
+Layer commits are pinned in
+[yocto/kas/tx2nx-rootfs.lock.yml](yocto/kas/tx2nx-rootfs.lock.yml); run
+`kas lock yocto/kas/tx2nx-rootfs.yml` to move to newer wrynose commits.
+The first build from scratch takes about an hour (16 cores, 4826 tasks);
+rebuilds from sstate take under a minute.
 
 Result: `/work/yocto/build/tmp/deploy/images/genericarm64/core-image-minimal-genericarm64.rootfs.tar.zst`
 
