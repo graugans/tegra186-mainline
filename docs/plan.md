@@ -118,6 +118,12 @@ output of the existing L4T boot ends up in the log.
 - Scripts: `build`, `deploy`, `power-cycle`, `console-expect`, `ssh-run`, `rootfs-reset`
 - Flow: patch → build → deploy → power cycle → check UART → tests via SSH → log
 - Unique run ID in kernel/rootfs, printed on the UART
+- pytest + labgrid plugin in the dev container drive the board over serial and
+  SSH; nothing runs pytest on the board (decision 0007)
+- Tests declare their requirements as pytest markers (kernel version, config
+  symbols, bootargs, userspace tools, lab services, timeout, thresholds);
+  tests whose requirements the current build does not meet are deselected
+- Lab service `iperf3-server` in the Compose stack for throughput tests
 
 ### Phase 3 – DTB fixups
 1. Dump the CBoot DTB in U-Boot (`fdt addr`, `fdt print`) and compare with the mainline DTB
