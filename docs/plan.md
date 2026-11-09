@@ -124,6 +124,11 @@ output of the existing L4T boot ends up in the log.
   symbols, bootargs, userspace tools, lab services, timeout, thresholds);
   tests whose requirements the current build does not meet are deselected
 - Lab service `iperf3-server` in the Compose stack for throughput tests
+- Inspiration: Fabrizio Castro, Chris Paterson (Renesas): *Embedded Linux Kernel Testing With Pytest*,
+  Open Source Summit / ELC Europe 2026, Prague –
+  [talk page](https://osselceu2026.sched.com/event/2RaWL/embedded-linux-kernel-testing-with-pytest-fabrizio-castro-chris-paterson-renesas-electronics-europe-gmbh),
+  [slides (PDF)](https://hosted-files.sched.co/osselceu2026/7f/OSS-EU_2026_Embedded-Linux-Kernel-Testing-With-Pytest.pdf)
+  – the idea spark for marker-based test requirements
 
 ### Phase 3 – DTB fixups
 1. Dump the CBoot DTB in U-Boot (`fdt addr`, `fdt print`) and compare with the mainline DTB

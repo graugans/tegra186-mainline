@@ -172,6 +172,17 @@ Afterwards `/srv/tftp` and the UART get mounted into the dev container.
 - One variable per test step; every run gets a `logs/<run-id>/` directory and
   an entry in [docs/bringup-log.md](docs/bringup-log.md).
 
+## References and inspiration
+
+- Fabrizio Castro, Chris Paterson (Renesas): *Embedded Linux Kernel Testing With Pytest*,
+  Open Source Summit / ELC Europe 2026, Prague –
+  [talk page](https://osselceu2026.sched.com/event/2RaWL/embedded-linux-kernel-testing-with-pytest-fabrizio-castro-chris-paterson-renesas-electronics-europe-gmbh),
+  [slides (PDF)](https://hosted-files.sched.co/osselceu2026/7f/OSS-EU_2026_Embedded-Linux-Kernel-Testing-With-Pytest.pdf).
+  The idea spark for the test loop: pytest markers as each test's hardware/software
+  contract. Here adapted to labgrid, run from the dev container
+  ([decision 0007](docs/decisions/0007-pytest-labgrid-tests.md)).
+- [labgrid documentation](https://labgrid.readthedocs.io/)
+
 ## License
 
 [Apache-2.0](LICENSE)
