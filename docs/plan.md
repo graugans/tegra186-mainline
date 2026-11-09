@@ -19,16 +19,16 @@ updates. Mainline already supports the board via the DTS
 | Topic | Decision |
 |---|---|
 | Boot chain | MB1/MB2/BPMP blobs and CBoot stay unchanged; U-Boot from L4T stays (possibly patched in phase 3) |
-| Kernel | Current mainline LTS, not the 5.15 from JetPack 6 (NVIDIA provides no T186 support there) |
+| Kernel | Latest vanilla mainline LTS (currently 6.18), not the 5.15 from JetPack 6 (NVIDIA provides no T186 support there) |
 | Kernel transport | TFTP, driven by `pxe get` in U-Boot |
-| Rootfs | Yocto, via NFS from the host |
+| Rootfs | Yocto/OpenEmbedded wrynose (6.0 LTS), via NFS from the host |
 | meta-tegra | Not needed for the kernel; only as the source for CBoot sources (L4T R32.7.x branch) |
 | NFS server | Native on the host (no container) |
 | DHCP/TFTP | dnsmasq in Docker Compose, `network_mode: host` |
 | Board control | labgrid (coordinator + exporter) in Compose |
 | Power/buttons | Norn (Waveshare Pico Relay B, labgrid-compatible REST API, `cycle` for button pulses), runs on the host |
 | Console | USB-UART adapter on the debug UART |
-| Dev environment | Dev container with toolchain, kas, labgrid client, Claude Code |
+| Dev environment | Dockerfile-based dev container on the latest Debian stable (13 "trixie") with toolchain, kas, labgrid client, Claude Code |
 | Hosting | GitHub, hosting only, no CI/CD |
 | Audience | Author only, no students for now |
 
