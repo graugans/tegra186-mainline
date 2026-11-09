@@ -7,3 +7,4 @@ console-expect, ssh-run, rootfs-reset).
 |---|---|
 | `kernel-build.sh [fragment.cfg ...]` | clone pinned tag, apply patches, defconfig + fragments, build Image/DTB/modules into `/work/kernel-out` |
 | `rootfs-build.sh [kas args ...]` | create `/work/yocto` dirs, `kas build` the wrynose NFS rootfs |
+| `rootfs.sh status\|reset\|modules` | ask the rootfs-helper (lab stack) to show state, reset the NFS rootfs, or install kernel modules |
