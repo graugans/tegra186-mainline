@@ -16,7 +16,7 @@ test runs in [docs/bringup-log.md](docs/bringup-log.md).
 
 | Phase | State |
 |---|---|
-| 0 – Scaffolding | in progress: repo, dev container and kas config done; lab network, UART, Compose stack open |
+| 0 – Scaffolding | in progress: repo, dev container, kas config and kernel build (v6.18.62 defconfig) done; lab network, UART, Compose stack open |
 | 1a – Netboot with L4T 4.9 | open |
 | 1b – Mainline to a shell (initramfs) | open |
 | 1c – Mainline with NFS root | open |
@@ -97,7 +97,20 @@ Quick check:
 aarch64-linux-gnu-gcc --version && kas --version && claude --version
 ```
 
-### 4. Build the rootfs (inside the container)
+### 4. Build the kernel (inside the container)
+
+```sh
+scripts/kernel-build.sh                 # arm64 defconfig only
+scripts/kernel-build.sh nfs-root.cfg    # plus fragments from kernel/configs/
+```
+
+Shallow-clones the stable tree at the tag in [kernel/VERSION](kernel/VERSION)
+to `/work/linux` (reset to the tag on every run), applies
+`kernel/patches/*.patch`, builds out of tree in `/work/kernel-build` with
+ccache. Result in `/work/kernel-out/`: `Image`,
+`tegra186-p3509-0000+p3636-0001.dtb`, `config`, `modules/`, `VERSION`.
+
+### 5. Build the rootfs (inside the container)
 
 ```sh
 kas build yocto/kas/tx2nx-rootfs.yml
@@ -105,7 +118,7 @@ kas build yocto/kas/tx2nx-rootfs.yml
 
 Result: `/work/yocto/build/tmp/deploy/images/genericarm64/core-image-minimal-genericarm64.rootfs.tar.zst`
 
-### 5. Host: TFTP and NFS directories (manual, as root)
+### 6. Host: TFTP and NFS directories (manual, as root)
 
 > Run on the host, not in the container.
 
@@ -127,13 +140,13 @@ sudo exportfs -ra && sudo exportfs -v
 `no_root_squash` is required for a root filesystem – keep the export restricted
 to the isolated lab subnet.
 
-### 6. Host: lab network (manual, as root) – *TODO, next session*
+### 7. Host: lab network (manual, as root) – *TODO, next session*
 
 Dedicated USB NIC on an isolated subnet (`192.168.77.0/24`, host `.1`),
 NFS/DHCP/TFTP reachable only on that interface (firewalld zone). Exact
 interface name and commands will be added here.
 
-### 7. Host: UART and Norn – *TODO, next session*
+### 8. Host: UART and Norn – *TODO, next session*
 
 USB-UART adapter (stable `/dev/serial/by-id/...` path), Norn REST service on
 the host, then the Compose stack in `lab/` (dnsmasq, labgrid, rootfs-helper).
