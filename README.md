@@ -123,7 +123,8 @@ Creates `/work/yocto` (and the downloads/sstate dirs) and runs
 Layer commits are pinned in
 [yocto/kas/tx2nx-rootfs.lock.yml](yocto/kas/tx2nx-rootfs.lock.yml); run
 `kas lock yocto/kas/tx2nx-rootfs.yml` to move to newer wrynose commits.
-The first build from scratch takes about an hour (16 cores, 4826 tasks);
+The first build from scratch takes about an hour (16 cores, 4826 tasks)
+and uses about 53 GB in `/work/yocto` (downloads, sstate, tmp);
 rebuilds from sstate take under a minute.
 
 Result: `/work/yocto/build/tmp/deploy/images/genericarm64/core-image-minimal-genericarm64.rootfs.tar.zst`
