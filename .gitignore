@@ -1,0 +1,28 @@
+# Run logs (one directory per run-id); keep the directory itself
+/logs/*
+!/logs/.gitkeep
+
+# Build outputs and caches
+/build/
+/out/
+*.o
+*.ko
+Image
+*.dtb
+!/kernel/**/*.dtb
+.ccache/
+
+# Yocto / kas
+/yocto/build/
+/yocto/downloads/
+/yocto/sstate-cache/
+
+# Editors / OS
+*.swp
+*~
+.vscode/
+.DS_Store
+
+# Local, machine-specific overrides
+*.local
+.env
