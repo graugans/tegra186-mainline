@@ -1,0 +1,39 @@
+{
+  "name": "tegra186-mainline",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": { "USER_UID": "1000", "USER_GID": "1000" }
+  },
+  "remoteUser": "dev",
+  "updateRemoteUserUID": true,
+
+  // Same path inside and outside the container, so paths in logs, docs and
+  // Claude Code project memory match the host.
+  "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
+  "workspaceFolder": "${localWorkspaceFolder}",
+
+  // Large build data (kernel tree, Yocto, ccache) lives next to the repo, not in it.
+  "initializeCommand": "mkdir -p ${localWorkspaceFolder}/../tegra186-work",
+  "mounts": [
+    "source=${localWorkspaceFolder}/../tegra186-work,target=/work,type=bind",
+    "source=${localEnv:HOME}/.claude,target=/home/dev/.claude,type=bind"
+  ],
+
+  // Host network: reach labgrid coordinator, Norn and the lab subnet directly.
+  "runArgs": ["--network=host", "--hostname=tegra186-dev"],
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "yocto-project.yocto-bitbake",
+        "plorefice.devicetree",
+        "redhat.vscode-yaml",
+        "ms-python.python",
+        "timonwong.shellcheck",
+        "editorconfig.editorconfig",
+        "ms-vscode.makefile-tools"
+      ]
+    }
+  }
+}
